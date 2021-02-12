@@ -5,7 +5,7 @@
 
 # Other Requirements
 - OS: [Ubuntu](https://ubuntu.com/)
-- [OpenFace](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Action-Units)(ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY)
+- [OpenFace](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Action-Units)(ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY)<br>
   Follow the commands below to install and set the environment variable of OpenFace
   ```
   git clone https://github.com/TadasBaltrusaitis/OpenFace.git
