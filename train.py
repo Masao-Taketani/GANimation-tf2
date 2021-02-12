@@ -26,8 +26,9 @@ flags.DEFINE_float("beta1", 0.5, "beta1 for Adam optimizer")
 flags.DEFINE_float("beta2", 0.999, "beta2 for Adam optimizer")
 flags.DEFINE_float("lambda_rec", 10.0, "weight for reconstruction loss")
 flags.DEFINE_float("lambda_gp", 10.0, "weight for gradient penalty loss")
-flags.DEFINE_float("lambda_a", 0.1, "weight for attention loss")
+flags.DEFINE_float("lambda_attn", 0.1, "weight for attention loss")
 flags.DEFINE_float("lambda_cond", 4000, "weight for conditional expression loss")
+flags.DEFINE_float("lambda_tv", 1e-5, "weight for total variation loss")
 
 
 def main(argv):

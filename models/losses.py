@@ -60,3 +60,17 @@ def get_mean_for_loss(out_src):
 
 def get_l1_loss(x_real, x_rec):
     return tf.reduce_mean(tf.abs(x_real - x_rec))
+
+
+def get_attention_loss(fake_attn_mask, rec_attn_mask):
+    g_fake_attn_mask_loss = tf.reduce_mean(fake_attn_mask)
+    g_rec_attn_mask_loss = tf.reduce_mean(rec_attn_mask)
+    g_fake_tv_loss = compute_total_variation_regularization(fake_attn_mask)
+    g_rec_tv_loss = compute_total_variation_regularization(rec_attn_mask)
+    return g_fake_attn_mask_loss, g_rec_attn_mask_loss, g_fake_tv_loss, g_rec_tv_loss
+
+
+def compute_total_variation_regularization(attn_mask):
+    tv_loss_h = tf.reduce_sum(tf.abs(attn_mask[:, :-1, :, :] - attn_mask[:, 1:, :, :]))
+    tv_loss_w = tf.reduce_sum(tf.abs(attn_mask[:, :, :-1, :] - attn_mask[:, :, 1:, :]))
+    return tv_loss_h + tv_loss_w
