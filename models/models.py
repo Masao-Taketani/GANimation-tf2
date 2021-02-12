@@ -6,7 +6,6 @@ from layers import Downsample, Upsample, ResidualBlock
 
 
 INPUT_SHAPE = (128, 128, 3)
-C_DIM = 5
 
 class Discriminator(Model):
     """
@@ -135,12 +134,14 @@ class Generator(Model):
         Generator model
     """
     def __init__(self,
+                 c_dim=5,
                  first_filters=64,
                  output_channels=3,
                  norm_type="instancenorm", 
                  name="generator"):
 
         super(Generator, self).__init__(name=name)
+        self.c_dim = c_dim
         self.downsample_1 = Downsample(filters=first_filters, 
                                        size=7,
                                        strides=1,
@@ -215,14 +216,13 @@ class Generator(Model):
         return color_mask, attn_mask
 
     def summary(self):
-        c_dim = C_DIM
         x = Input(shape=INPUT_SHAPE)
-        c = Input(shape=(c_dim,))
+        c = Input(shape=(self.c_dim,))
         model = Model(inputs=[x, c], outputs=self.call(x, c), name=self.name)
         return model.summary()
 
 def build_model(c_dim):
-    generator = Generator()
+    generator = Generator(c_dim)
     discriminator = Discriminator(c_dim)
     
     tf.print("Check Generator's model architecture")
@@ -238,5 +238,5 @@ def build_model(c_dim):
 
 if __name__ == "__main__":
     # Test the shapes of the models
-    c_dim = 5
+    c_dim = 17
     gen, disc = build_model(c_dim)

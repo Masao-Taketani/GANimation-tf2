@@ -47,6 +47,13 @@ def get_classification_loss(target, logits):
     return loss
 
 
+def get_conditional_expression_loss(true, pred):
+    loss_total = tf.keras.losses.MSE(true, pred)
+    loss = tf.reduce_mean(loss_total)
+    
+    return loss
+
+
 def get_mean_for_loss(out_src):
     return tf.reduce_mean(out_src)
 
