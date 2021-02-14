@@ -40,7 +40,7 @@ def train_gen(disc,
               gen,
               x_real,
               label_ini_cond.
-              label_fin_cond, 
+              label_fin_cond,
               lambda_cond,
               lambda_rec,
               lambda_attn,
@@ -70,3 +70,43 @@ def train_gen(disc,
     opt.apply_gradients(zip(gen_gradients, gen.trainable_variables))
 
     return g_loss, g_loss_fake, g_loss_cond, g_loss_rec, g_fake_attn_mask_loss, g_rec_attn_mask_loss, g_fake_tv_loss, g_rec_tv_loss
+
+
+@tf.function
+def update_lr(gen_opt, disc_opt, max_epoch, epoch, g_lr=0.0001, d_lr=0.0001):
+    if g_lr != d_lr:
+        decayed_lr = get_lr_decay_factor(epoch, max_epoch, g_lr)
+        gen_opt.lr.assign(decayed_lr)
+        disc_opt.lr.assign(decayed_lr)
+        # to debug
+        tf.print("decayed lr G: {}, D: {}".format(gen_opt.lr, disc_opt.lr))
+    else:
+        g_decayed_lr =  get_lr_decay_factor(epoch, 
+                                            max_epoch,
+                                            g_lr)
+        d_decayed_lr =  get_lr_decay_factor(epoch, 
+                                            max_epoch,
+                                            d_lr)
+        gen_opt.lr.assign(g_decayed_lr)
+        disc_opt.lr.assign(d_decayed_lr)
+        # to debug
+        print("decayed lr G: {}, D: {}".format(gen_opt.lr, disc_opt.lr))
+
+
+@tf.function
+def update_lr_by_iter(gen_opt, disc_opt, iteration, diff_iter, g_lr=0.0001, d_lr=0.0001):
+    if g_lr != d_lr:
+        decayed_lr = get_lr_decay_factor_by_iter(iteration, diff_iter, g_lr)
+        gen_opt.lr.assign(decayed_lr)
+        disc_opt.lr.assign(decayed_lr)
+        # to debug
+        #tf.print("decayed lr G: {}, D: {}".format(gen_opt.lr, disc_opt.lr))
+    else:
+        g_decayed_lr =  get_lr_decay_factor_by_iter(iteration, 
+                                                    diff_iter,
+                                                    g_lr)
+        d_decayed_lr =  get_lr_decay_factor_by_iter(iteration, 
+                                                    diff_iter,
+                                                    d_lr)
+        gen_opt.lr.assign(g_decayed_lr)
+        disc_opt.lr.assign(d_decayed_lr)

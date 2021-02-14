@@ -1,6 +1,30 @@
 import tensorflow as tf
 
 
+def initialize_loss_trackers():
+    d_losses = ("d_loss",
+                "d_loss_cond",
+                "d_loss_real",
+                "d_loss_fake",
+                "d_loss_gp")
+
+    g_losses = ("g_loss",
+                "g_loss_fake",
+                "g_loss_cond",
+                "g_loss_rec",
+                "g_fake_attn_mask_loss",
+                "g_rec_attn_mask_loss",
+                "g_fake_tv_loss",
+                "g_rec_tv_loss")
+
+    d_loss_list = []
+    g_loss_list = []
+    dl_list = store_loss_tracker(d_loss_list, d_losses)
+    gl_list = store_loss_tracker(g_loss_list, g_losses)
+
+    return dl_list, gl_list
+
+
 def store_loss_tracker(loss_list, losses):
     for name in losses:
         loss_list.append(define_loss_tracker(name))
