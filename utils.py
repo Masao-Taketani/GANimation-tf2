@@ -110,3 +110,27 @@ def update_lr_by_iter(gen_opt, disc_opt, iteration, diff_iter, g_lr=0.0001, d_lr
                                                     d_lr)
         gen_opt.lr.assign(g_decayed_lr)
         disc_opt.lr.assign(d_decayed_lr)
+
+
+def print_log(epoch, start, end, d_losses, g_losses):
+    tf.print("\nTime taken for epoch {} is {:.3f} sec\n".format(epoch,
+                                                                round(end - start)))
+    d_log = "d_loss: {:.3f} (d_loss_cond: {:.3f}, d_loss_real: {:.3f}, "
+            "d_loss_fake: {:.3f}, d_loss_gp: {:.3f})"
+    g_log = "g_loss: {:.3f} (g_loss_fake: {:.3f}, g_loss_cond: {:.3f}, "
+            "g_loss_rec: {:.3f}, g_fake_attn_mask_loss: {:.3f}, "
+            "g_rec_attn_mask_loss: {:.3f}, g_fake_tv_loss: {:.3f}, "
+            "g_rec_tv_loss: {:.3f})"
+    tf.print(d_log.format(d_losses[0],
+                          d_losses[1], 
+                          d_losses[2], 
+                          d_losses[3], 
+                          d_losses[4]))
+    tf.print(g_log.format(g_losses[0], 
+                          g_losses[1], 
+                          g_losses[2], 
+                          g_losses[3], 
+                          g_losses[4], 
+                          g_losses[5], 
+                          g_losses[6], 
+                          g_losses[7]))

@@ -84,7 +84,12 @@ def main(argv):
         for x_real, label_org, label_trg in tqdm(train_dataset):
             step += 1
             #if step.numpy() > FLAGS.num_iters_decay:
-            #    update_lr_by_iter(gen_opt, disc_opt, step, diff_iter, FLAGS.g_lr, FLAGS.d_lr)
+            #    update_lr_by_iter(gen_opt, 
+            #                      disc_opt, 
+            #                      step, 
+            #                      diff_iter, 
+            #                      FLAGS.g_lr, 
+            #                      FLAGS.d_lr)
 
             d_losses = train_disc(disc,
                                   gen,
@@ -128,22 +133,32 @@ def main(argv):
             tf.summary.scalar("g_loss_fake", g_loss_list[1].result(), step=ckpt.epoch)
             tf.summary.scalar("g_loss_cond", g_loss_list[2].result(), step=ckpt.epoch)
             tf.summary.scalar("g_loss_rec", g_loss_list[3].result(), step=ckpt.epoch)
-            tf.summary.scalar("g_fake_attn_mask_loss", g_loss_list[0].result(), step=ckpt.epoch)
-            tf.summary.scalar("g_rec_attn_mask_loss", g_loss_list[1].result(), step=ckpt.epoch)
+            tf.summary.scalar("g_fake_attn_mask_loss", 
+                              g_loss_list[0].result(), 
+                              step=ckpt.epoch)
+            tf.summary.scalar("g_rec_attn_mask_loss", 
+                              g_loss_list[1].result(), 
+                              step=ckpt.epoch)
             tf.summary.scalar("g_fake_tv_loss", g_loss_list[2].result(), step=ckpt.epoch)
             tf.summary.scalar("g_rec_tv_loss", g_loss_list[3].result(), step=ckpt.epoch)
 
         # test the generator model and save the results for each epoch
-        fpath = os.path.join(FLAGS.test_result_dir, "{}-images.jpg".format(ckpt.epoch.numpy()))
-        save_test_results(gen, test_imgs[:FLAGS.num_test], c_fixed_trg_list, fpath)
+        #fpath = os.path.join(FLAGS.test_result_dir, 
+        #                     "{}-images.jpg".format(ckpt.epoch.numpy()))
+        #save_test_results(gen, test_imgs[:FLAGS.num_test], c_fixed_trg_list, fpath)
 
         if (ckpt.epoch) % FLAGS.model_save_epoch == 0:
             ckpt_save_path = ckpt_manager.save()
-            print("Saving a checkpoint for epoch {} at {}".format(ckpt.epoch.numpy(), ckpt_save_path))
+            print("Saving a checkpoint for epoch {} at {}".format(ckpt.epoch.numpy(), 
+                                                                  ckpt_save_path))
 
         if ckpt.epoch > FLAGS.num_epochs_decay:
-            update_lr(gen_opt, disc_opt, FLAGS.num_epochs, ckpt.epoch, FLAGS.g_lr, FLAGS.d_lr)
-
+            update_lr(gen_opt, 
+                      disc_opt, 
+                      FLAGS.num_epochs, 
+                      ckpt.epoch, 
+                      FLAGS.g_lr, 
+                      FLAGS.d_lr)
 
 
 def __name__ == "__main__":
