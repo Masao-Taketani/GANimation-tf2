@@ -17,6 +17,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("ckpt_dir", "ckpts/", "path to the checkpoint dir")
 flags.DEFINE_string("logdir", "logs/", "path to the log dir")
 flags.DEFINE_string("test_result_dir", "test_results/", "path to the test result dir")
+flags.DEFINE_integer("batch_size", 25, "number of batch size")
 flags.DEFINE_integer("num_epochs", 30, "number of epopchs to train")
 flags.DEFINE_integer("num_epochs_decay", 20, "number of epochs to start lr decay")
 flags.DEFINE_integer("model_save_epoch", 1, "to save model every specified epochs")
@@ -43,6 +44,16 @@ def main(argv):
     os.makedirs(FLAGS.ckpt_dir, exist_ok=True)
     os.makedirs(FLAGS.logdir, exist_ok=True)
     os.makedirs(FLAGS.test_result_dir, exist_ok=True)
+
+    train_dataset = tf.data.Dataset.list_files(os.path.join(train_dir, "*.tfrecord"))
+    train_dataset = train_dataset.interleave(tf.data.TFRecordDataset,
+                                         num_parallel_calls=AUTOTUNE,
+                                         deterministic=False)
+    train_dataset = train_dataset.map(parse_tfrecords)
+    train_dataset = train_dataset.map(preprocess_for_training,
+                                  num_parallel_calls=AUTOTUNE)
+    train_dataset = train_dataset.batch(batch_size=FLAGS.batch_size, drop_remainder=True)
+    train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
 
     gen, disc = build_model(FLAGS.num_cond)
 
