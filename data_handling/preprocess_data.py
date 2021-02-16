@@ -5,24 +5,23 @@ from glob import glob
 from absl import app
 from absl import flags
 
+from face_utils import *
+
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("openface_dir", "../../../OpenFace/", "path to OpenFace dir")
-flags.DEFINE_string("img_dir", "../dataset/", "path to images-stored dir")
+flags.DEFINE_string("img_dir", "../dataset/images/", "path to images-stored dir")
+flags.DEFINE_string("cropped_img_dir", "../dataset/cropped/", "path to cropped-image dir")
 
 
 def check_dir(dpath):
     assert os.path.isdir(dpath), "specified dir doesn't exist. You specified {}" \
                                  .format(dpath)
 
-def get_aus(openface_dir, img_dir):
-    exe = os.path.join(openface_dir, "build/bin/FaceLandmarkImg")
-    command = [exe, "-fdir", img_dir, "-aus"]
-    subprocess.run(command)
 
-def move_csvs(img_dir):
-    command = "mv processed/*.csv {}".format(img_dir)
+def move_csvs(to_dir):
+    command = "for csv in processed/*; do mv \"$csv\" {}; done".format(to_dir)
     subprocess.run(command, shell=True)
 
 def remove_unneeded_dir():
@@ -34,8 +33,10 @@ def main(argv):
     
     check_dir(FLAGS.openface_dir)
     check_dir(FLAGS.img_dir)
+    os.makedirs(FLAGS.cropped_img_dir, exist_ok=True)
+    detect_crop_and_save_faces(FLAGS.img_dir, FLAGS.cropped_dir)
     get_aus(FLAGS.openface_dir, FLAGS.img_dir)
-    move_csvs(FLAGS.img_dir)
+    move_csvs(FLAGS.cropped_dir)
     remove_unneeded_dir()
 
     print("Preprocessing is done!")
