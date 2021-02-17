@@ -18,7 +18,9 @@
   1. To install Face Recognition, you need to install [dlib](https://github.com/davisking/dlib) first. To install dlib, please refer to the following page.<br>
   https://github.com/ageitgey/face_recognition/blob/master/Dockerfile#L6-L34
   2. Then install Face Recgnition as follows.
-  ```pip install face_recognition```
+  ```
+  pip install face_recognition
+  ```
 
 
 

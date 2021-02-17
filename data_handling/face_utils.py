@@ -2,6 +2,7 @@ import os
 import subprocess
 from glob import glob
 
+from tqdm import tqdm
 from PIL import Image
 import face_recognition
 
@@ -32,7 +33,7 @@ def get_aus(openface_dir, img_dir):
 
 def detect_crop_and_save_faces(img_dir, cropped_dir):
     img_list = glob(os.path.join(img_dir, "*.jpg"))
-    for img in img_list:
+    for img in tqdm(img_list):
         face_loc = detect_faces(img)
         if len(face_loc) == 1:
             crop_and_save_faces(img, face_loc[0], cropped_dir)

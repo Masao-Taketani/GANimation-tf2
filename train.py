@@ -172,5 +172,5 @@ def main(argv):
                       FLAGS.d_lr)
 
 
-def __name__ == "__main__":
+if __name__ == "__main__":
     app.run(main)
