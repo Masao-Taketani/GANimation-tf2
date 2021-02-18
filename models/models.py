@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Conv2D, Conv2DTranspose, Input
 
-from layers import Downsample, Upsample, ResidualBlock
+from .layers import Downsample, Upsample, ResidualBlock
 
 
 INPUT_SHAPE = (128, 128, 3)

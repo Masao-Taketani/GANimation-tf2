@@ -3,6 +3,61 @@ import tensorflow as tf
 from models.losses import *
 
 
+def normalize(img):
+    # convert img vals from [0, 255] to [-1, 1]
+    img = tf.cast(img, tf.float32)
+    img = (img / 127.5) - 1.0
+    return img
+
+
+def denormalize(img):
+    # convert img vals from [-1, 1] to [0, 1]
+    return img / 2.0 + 0.5
+
+
+def random_horizontal_flip(img):
+    if tf.random.uniform(()) > 0.5:
+        img = tf.image.flip_left_right(img)
+    return img
+
+
+def resize(img, size=128):
+    img = tf.image.resize(img,
+                          [size, size],
+                          method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+    return img
+
+
+def read_and_decode_img(img_path):
+    # from image path to string
+    img_string = tf.io.read_file(img_path)
+    # from jpg-encoded image to a uint8
+    img = tf.io.decode_jpeg(img_string)
+    return img
+
+
+def preprocess_img(img,
+                   use_aug=True,
+                   do_normalize=True):
+
+    if use_aug:
+        img = random_horizontal_flip(img)
+    if do_normalize:
+        img = normalize(img)
+    return img
+
+
+def preprocess_for_training(img, ini_cond):
+    c_dim = 17
+    # For image preprocessing
+    img = preprocess_img(img)
+    # Generate fin cond labels randomly
+    fin_cond = tf.random.shuffle(ini_cond)
+    fin_cond += tf.random.uniform([c_dim], -0.1, 0.1)
+
+    return img, ini_cond, fin_cond
+
+
 @tf.function
 def train_disc(disc,
                gen,
@@ -39,7 +94,7 @@ def train_disc(disc,
 def train_gen(disc,
               gen,
               x_real,
-              label_ini_cond.
+              label_ini_cond,
               label_fin_cond,
               lambda_cond,
               lambda_rec,
@@ -115,11 +170,11 @@ def update_lr_by_iter(gen_opt, disc_opt, iteration, diff_iter, g_lr=0.0001, d_lr
 def print_log(epoch, start, end, d_losses, g_losses):
     tf.print("\nTime taken for epoch {} is {:.3f} sec\n".format(epoch,
                                                                 round(end - start)))
-    d_log = "d_loss: {:.3f} (d_loss_cond: {:.3f}, d_loss_real: {:.3f}, "
+    d_log = "d_loss: {:.3f} (d_loss_cond: {:.3f}, d_loss_real: {:.3f}, " \
             "d_loss_fake: {:.3f}, d_loss_gp: {:.3f})"
-    g_log = "g_loss: {:.3f} (g_loss_fake: {:.3f}, g_loss_cond: {:.3f}, "
-            "g_loss_rec: {:.3f}, g_fake_attn_mask_loss: {:.3f}, "
-            "g_rec_attn_mask_loss: {:.3f}, g_fake_tv_loss: {:.3f}, "
+    g_log = "g_loss: {:.3f} (g_loss_fake: {:.3f}, g_loss_cond: {:.3f}, " \
+            "g_loss_rec: {:.3f}, g_fake_attn_mask_loss: {:.3f}, " \
+            "g_rec_attn_mask_loss: {:.3f}, g_fake_tv_loss: {:.3f}, " \
             "g_rec_tv_loss: {:.3f})"
     tf.print(d_log.format(d_losses[0],
                           d_losses[1], 
@@ -134,3 +189,33 @@ def print_log(epoch, start, end, d_losses, g_losses):
                           g_losses[5], 
                           g_losses[6], 
                           g_losses[7]))
+
+
+def unpack_img(img):
+    img = tf.raw_ops.Unpack(value=img, num=img.shape[0])
+
+    return tf.concat(tensor_list, axis=0)
+
+
+def concat_tensors(t1, t2):
+    return tf.concat([t1, t2], axis=1)
+
+
+#def generate_final_fake_img(color_mask, attn_mask):
+
+
+def save_test_results(model, img, fin_cond, save_path):
+    color_mask, attn_mask = model(img, fin_cond)
+    results = denormalize(results)
+    col_img = unpack_img(img)
+    col_res = unpack_img(results)
+    horizontal_img = make_img_horizontal(result)
+    results.append(horizontal_img)d
+    tensor = postprocess_to_plot(results)
+    save_img(tensor, save_path)
+
+
+def save_img(tensor, fpath):
+    bstr = tf.io.encode_jpeg(tensor)
+    with open(fpath, "wb") as f:
+        f.write(bstr.numpy())

@@ -9,11 +9,15 @@ from absl import flags
 
 import tensorflow as tf
 
-from models import build_model
+from models.models import build_model
+from utils import *
+from models.losses import *
+from data_handling.tfrecord_manager import parse_tfrecords
 
 
 FLAGS = flags.FLAGS
 
+flags.DEFINE_string("tfrecord_dir", "dataset/tfrecords/", "path to tfrecords data dir")
 flags.DEFINE_string("ckpt_dir", "ckpts/", "path to the checkpoint dir")
 flags.DEFINE_string("logdir", "logs/", "path to the log dir")
 flags.DEFINE_string("test_result_dir", "test_results/", "path to the test result dir")
@@ -33,6 +37,7 @@ flags.DEFINE_float("lambda_gp", 10.0, "weight for gradient penalty loss")
 flags.DEFINE_float("lambda_attn", 0.1, "weight for attention loss")
 flags.DEFINE_float("lambda_cond", 4000, "weight for conditional expression loss")
 flags.DEFINE_float("lambda_tv", 1e-5, "weight for total variation loss")
+flags.DEFINE_integer("num_test", 5, "number of test examples")
 
 
 def main(argv):
@@ -45,7 +50,8 @@ def main(argv):
     os.makedirs(FLAGS.logdir, exist_ok=True)
     os.makedirs(FLAGS.test_result_dir, exist_ok=True)
 
-    train_dataset = tf.data.Dataset.list_files(os.path.join(train_dir, "*.tfrecord"))
+    tfr_list = os.path.join(FLAGS.tfrecord_dir, "*.tfrecord")
+    train_dataset = tf.data.Dataset.list_files(tfr_list)
     train_dataset = train_dataset.interleave(tf.data.TFRecordDataset,
                                          num_parallel_calls=AUTOTUNE,
                                          deterministic=False)
@@ -54,6 +60,13 @@ def main(argv):
                                   num_parallel_calls=AUTOTUNE)
     train_dataset = train_dataset.batch(batch_size=FLAGS.batch_size, drop_remainder=True)
     train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
+
+    test_dataset = tf.data.Dataset.list_files(os.path.join(tfr_list)
+    test_dataset = test_dataset.interleave(tf.data.TFRecordDataset,
+                                           deterministic=True)
+    test_dataset = test_dataset.map(parse_tfrecords)
+    test_dataset = test_dataset.map(preprocess_for_training)
+    test_dataset = test_dataset.batch(batch_size=FLAGS.num_test, drop_remainder=True)
 
     gen, disc = build_model(FLAGS.num_cond)
 
@@ -84,6 +97,8 @@ def main(argv):
 
     d_loss_list, g_loss_list = initialize_loss_trackers()
 
+    test_img, _, test_fin_cond = next(iter(test_dataset.take(1)))
+
     # Train the discriminator and the generator
     while ckpt.epoch < FLAGS.num_epochs:
         ckpt.epoch.assign_add(1)
@@ -92,7 +107,7 @@ def main(argv):
         reset_loss_trackers(g_loss_list)
 
         start = time.time()
-        for x_real, label_org, label_trg in tqdm(train_dataset):
+        for x_real, label_ini_cond, label_fin_cond in tqdm(train_dataset):
             step += 1
             #if step.numpy() > FLAGS.num_iters_decay:
             #    update_lr_by_iter(gen_opt, 
@@ -107,8 +122,8 @@ def main(argv):
                                   x_real,
                                   label_ini_cond, 
                                   label_fin_cond, 
-                                  lambda_cond, 
-                                  lambda_gp, 
+                                  FLAGS.lambda_cond, 
+                                  FLAGS.lambda_gp, 
                                   disc_opt)
 
             update_loss_trackers(d_loss_list, d_losses)
@@ -117,17 +132,17 @@ def main(argv):
                 g_losses = train_gen(disc,
                                      gen,
                                      x_real,
-                                     label_ini_cond.
+                                     label_ini_cond,
                                      label_fin_cond,
-                                     lambda_cond,
-                                     lambda_rec,
-                                     lambda_attn,
-                                     lambda_tv,
+                                     FLAGS.lambda_cond,
+                                     FLAGS.lambda_rec,
+                                     FLAGS.lambda_attn,
+                                     FLAGS.lambda_tv,
                                      gen_opt)
 
                 update_loss_trackers(g_loss_list, g_losses)
 
-            if step.numpy() == iters_per_epoch:
+            if step == 5:
                 break
 
         end = time.time()
@@ -154,9 +169,9 @@ def main(argv):
             tf.summary.scalar("g_rec_tv_loss", g_loss_list[3].result(), step=ckpt.epoch)
 
         # test the generator model and save the results for each epoch
-        #fpath = os.path.join(FLAGS.test_result_dir, 
-        #                     "{}-images.jpg".format(ckpt.epoch.numpy()))
-        #save_test_results(gen, test_imgs[:FLAGS.num_test], c_fixed_trg_list, fpath)
+        save_path = os.path.join(FLAGS.test_result_dir, 
+                                 "{}-images.jpg".format(ckpt.epoch.numpy()))
+        save_test_results(gen, test_img, test_fin_cond, save_path)
 
         if (ckpt.epoch) % FLAGS.model_save_epoch == 0:
             ckpt_save_path = ckpt_manager.save()
