@@ -191,31 +191,38 @@ def print_log(epoch, start, end, d_losses, g_losses):
                           g_losses[7]))
 
 
-def unpack_img(img):
+def unpack_and_stack_img_vertically(img):
     img = tf.raw_ops.Unpack(value=img, num=img.shape[0])
 
-    return tf.concat(tensor_list, axis=0)
+    return tf.concat(img, axis=0)
 
 
-def concat_tensors(t1, t2):
+def concat_tensors_horizontally(t1, t2):
     return tf.concat([t1, t2], axis=1)
 
 
-#def generate_final_fake_img(color_mask, attn_mask):
+def get_final_fake_img(color_mask, attn_mask, real_img):
+    return (1 - attn_mask) * color_mask + attn_mask * real_img
 
 
-def save_test_results(model, img, fin_cond, save_path):
-    color_mask, attn_mask = model(img, fin_cond)
-    results = denormalize(results)
-    col_img = unpack_img(img)
-    col_res = unpack_img(results)
-    horizontal_img = make_img_horizontal(result)
-    results.append(horizontal_img)d
-    tensor = postprocess_to_plot(results)
-    save_img(tensor, save_path)
+def postprocess_to_plot(color_mask, attn_mask, real_img):
+    fin_fake_img = get_final_fake_img(color_mask, attn_mask, real_img)
+    col_real_img = unpack_and_stack_img_vertically(real_img)
+    col_fake_img = unpack_and_stack_img_vertically(fin_fake_img)
+    combined_img = concat_tensors_horizontally(col_real_img, col_fake_img)
+    combined_img = denormalize(combined_img)
+    combined_img = tf.cast(combined_img * 255, dtype=tf.uint8)
+
+    return combined_img
 
 
 def save_img(tensor, fpath):
     bstr = tf.io.encode_jpeg(tensor)
     with open(fpath, "wb") as f:
         f.write(bstr.numpy())
+
+
+def save_test_results(model, img, fin_cond, save_path):
+    color_mask, attn_mask = model(img, fin_cond)
+    combined_img = postprocess_to_plot(color_mask, attn_mask, img)
+    save_img(combined_img, save_path)

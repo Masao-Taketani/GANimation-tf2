@@ -61,7 +61,7 @@ def main(argv):
     train_dataset = train_dataset.batch(batch_size=FLAGS.batch_size, drop_remainder=True)
     train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
 
-    test_dataset = tf.data.Dataset.list_files(os.path.join(tfr_list)
+    test_dataset = tf.data.Dataset.list_files(os.path.join(tfr_list))
     test_dataset = test_dataset.interleave(tf.data.TFRecordDataset,
                                            deterministic=True)
     test_dataset = test_dataset.map(parse_tfrecords)
@@ -141,9 +141,6 @@ def main(argv):
                                      gen_opt)
 
                 update_loss_trackers(g_loss_list, g_losses)
-
-            if step == 5:
-                break
 
         end = time.time()
         print_log(ckpt.epoch.numpy(), start, end, d_losses, g_losses)

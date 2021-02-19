@@ -7,7 +7,7 @@ from absl import flags
 
 import tensorflow as tf
 
-from data_loader import get_data
+from .data_loader import get_data
 
 
 FLAGS = flags.FLAGS
