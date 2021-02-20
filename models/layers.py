@@ -3,8 +3,10 @@ from tensorflow.keras.layers import Layer, Conv2D, BatchNormalization, LeakyReLU
      ReLU, Conv2DTranspose
 import tensorflow_addons as tfa
 
-#WEIGHT_INITIALIZER = tf.random_normal_initializer(mean=0.0, stddev=0.02)
-WEIGHT_INITIALIZER = "glorot_uniform"
+
+#WEIGHT_INITIALIZER = "glorot_uniform"
+WEIGHT_INITIALIZER = tf.random_normal_initializer(mean=0.0, stddev=0.02)
+
 
 def get_norm_layer(norm_type):
     if norm_type.lower() == "batchnorm":

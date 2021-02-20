@@ -107,7 +107,7 @@ def main(argv):
         reset_loss_trackers(g_loss_list)
 
         start = time.time()
-        for x_real, label_ini_cond, label_fin_cond in tqdm(train_dataset):
+        for x_real, label_ini_cond, label_fin_cond in tqdm(train_dataset.take(5)):
             step += 1
             #if step.numpy() > FLAGS.num_iters_decay:
             #    update_lr_by_iter(gen_opt, 

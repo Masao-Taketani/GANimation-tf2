@@ -167,6 +167,14 @@ def update_lr_by_iter(gen_opt, disc_opt, iteration, diff_iter, g_lr=0.0001, d_lr
         disc_opt.lr.assign(d_decayed_lr)
 
 
+def get_lr_decay_factor(epoch, max_epoch, init_lr=0.0001):
+    return tf.cast(2.0 * init_lr * (- tf.cast(epoch, tf.float32) / tf.cast(max_epoch, tf.float32) + 1.0), dtype=tf.float32)
+
+
+def get_lr_decay_factor_by_iter(iteration, diff_iter, init_lr=0.0001):
+    return tf.cast(init_lr * (- tf.cast(iteration, tf.float32) / tf.cast(diff_iter, tf.float32) + 2.0), dtype=tf.float32)
+
+    
 def print_log(epoch, start, end, d_losses, g_losses):
     tf.print("\nTime taken for epoch {} is {:.3f} sec\n".format(epoch,
                                                                 round(end - start)))
